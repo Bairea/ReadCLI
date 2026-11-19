@@ -32,22 +32,24 @@ func applyLayoutWithReflow(termWidth, termHeight int, reflow bool) {
 		width = fixedWidth
 	}
 
+	focusLevel := effectiveFocusLevel()
 	leftWidth := 24
 	rightWidth := 28
 	headerHeight := 4
 	footerHeight := 4
-	compact := compactReadingUI()
-	if compact {
+	if focusLevel >= 1 {
 		leftWidth = 0
 		rightWidth = 0
+	}
+	if focusLevel >= 2 {
 		headerHeight = 0
 		footerHeight = 1
 	}
-	if !compact && width < 120 {
+	if focusLevel == 0 && width < 120 {
 		leftWidth = 20
 		rightWidth = 22
 	}
-	if !compact && width < 90 {
+	if focusLevel == 0 && width < 90 {
 		leftWidth = 18
 		rightWidth = 0
 	}
@@ -58,7 +60,7 @@ func applyLayoutWithReflow(termWidth, termHeight int, reflow bool) {
 		rightWidth = 0
 	}
 
-	if !compact && termHeight < 16 {
+	if focusLevel < 2 && termHeight < 16 {
 		headerHeight = 4
 		footerHeight = 3
 	}
@@ -68,12 +70,16 @@ func applyLayoutWithReflow(termWidth, termHeight int, reflow bool) {
 		contentHeight = 1
 	}
 
-	if compact {
+	if focusLevel >= 2 {
 		mainContentWidth = mainWidth
 		mainContentHeight = contentHeight
 	} else {
-		mainContentWidth = mainWidth - 2
-		mainContentHeight = contentHeight - 2
+		borderPad := 0
+		if app != nil && app.uiState.showBorder {
+			borderPad = 2
+		}
+		mainContentWidth = mainWidth - borderPad
+		mainContentHeight = contentHeight - borderPad
 	}
 
 	nextContentWidth := readingContentWidth(mainWidth)
@@ -103,6 +109,28 @@ func applyLayoutWithReflow(termWidth, termHeight int, reflow bool) {
 	refreshChrome()
 }
 
+// effectiveFocusLevel resolves the focus level that applies to the current scene.
+// Reader surfaces keep the configured level, overlays opened from reading drop
+// back to the half level so the header and key hints stay visible, and every
+// other scene uses the full layout.
+func effectiveFocusLevel() int {
+	if app == nil || app.bossKey {
+		return 0
+	}
+	level := app.readingState.focusLevel
+	if level < 1 {
+		return 0
+	}
+	switch app.mode {
+	case modeReading:
+		return level
+	case modeTOC, modeBookmarks, modeReadingSettings, modeSearchInput, modeReadingJumpInput, modeReadingColorInput:
+		return 1
+	default:
+		return 0
+	}
+}
+
 func compactReadingUI() bool {
-	return app != nil && app.readingState.compactMode && app.mode == modeReading && !app.bossKey
+	return effectiveFocusLevel() >= 2
 }

@@ -125,10 +125,12 @@ func buildLeftPanel(th theme) string {
 		fmt.Sprintf("    > %s", shorten(currentDisplayName(), 14)),
 		"",
 		"[Actions](fg:yellow,mod:bold)",
+		"  Alt+w/s 上下翻页",
 		"  / 搜索",
 		"  s 保存书签",
 		"  B 打开书签",
 		"  m 目录",
+		"  z 专注级别",
 		"  c 切换颜色",
 		"  C 更换书源",
 		"  P 净化配置",
@@ -268,7 +270,7 @@ func buildFooter() string {
 	case modeHome:
 		return line1 + "\n[↑/↓](fg:cyan):选择  [→/Enter](fg:cyan):打开  [C](fg:cyan):换源  [P](fg:cyan):净化  [/](fg:cyan):搜书架  [s](fg:cyan):在线搜书  [S](fg:cyan):书源  [i](fg:cyan):导入  [o/r](fg:cyan):排序/过滤  [x](fg:cyan):移除  [T](fg:cyan):主题  [u](fg:cyan):更新  [q](fg:red):退出"
 	case modeReading:
-		return line1 + "\n[↑/↓](fg:cyan):翻页  [←/→](fg:cyan):切章  [C](fg:cyan):换源  [P](fg:cyan):净化  [g](fg:cyan):跳转  [?](fg:cyan):快捷键  [+/-](fg:cyan):正文行数  [a](fg:cyan):对齐  [c](fg:cyan):颜色  [,](fg:cyan):设置  [/](fg:cyan):搜索  [s/B](fg:cyan):书签  [m](fg:cyan):目录  [z](fg:cyan):精简/全信息  [q](fg:red):书架"
+		return line1 + "\n[↑/↓](fg:cyan):翻页  [←/→](fg:cyan):切章  [C](fg:cyan):换源  [P](fg:cyan):净化  [g](fg:cyan):跳转  [?](fg:cyan):快捷键  [+/-](fg:cyan):正文行数  [a](fg:cyan):对齐  [c](fg:cyan):颜色  [,](fg:cyan):设置  [/](fg:cyan):搜索  [s/B](fg:cyan):书签  [m](fg:cyan):目录  [z](fg:cyan):专注级别  [q](fg:red):书架"
 	case modeTOC:
 		return line1 + "\n[↑/↓](fg:cyan):移动  [→/Enter](fg:cyan):打开  [←/m](fg:cyan):返回  [0-9](fg:cyan):跳章  [q](fg:red):书架"
 	case modeBookmarks:
@@ -333,8 +335,8 @@ func compactReadingStatusLine() string {
 	if app.online.busy != "" {
 		return remoteLabel(app.online.busy) + " · Esc 取消"
 	}
-	if app.uiState.statusMessageKind == statusError {
-		return remoteLabel(app.uiState.statusMessage)
+	if message := strings.TrimSpace(app.uiState.statusMessage); message != "" {
+		return remoteLabel(message)
 	}
 	statusWidth := runewidth.StringWidth("  ·  " + status + switchHint)
 	chapter = shortenDisplay(chapter, max(8, width-statusWidth))
@@ -492,7 +494,7 @@ func withReadingQuickHelp(text string) string {
 		"[快捷键](fg:green,mod:bold)  j/k 翻页  ←/→ 切章  g 跳转  / 搜索",
 		"          s 书签  B 书签列表  m 目录  C 换源  P 净化",
 		"          , 阅读设置  a 对齐  c 颜色  t 自动翻页  q 书架",
-		"          z 精简/全信息 · 再按 ? 隐藏",
+		"          Alt+w/s 上下翻页  z 专注级别 · 再按 ? 隐藏",
 	}
 	for i := range help {
 		help[i] = termuiStyleToTview(help[i])

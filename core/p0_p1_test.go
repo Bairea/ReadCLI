@@ -101,7 +101,7 @@ func TestHomeInspectorDoesNotExposeCompactMode(t *testing.T) {
 		mode:   modeHome,
 		config: &lib.Config{Theme: "vscode"},
 		readingState: readingState{
-			compactMode: true,
+			focusLevel: 2,
 		},
 		bookshelf: &lib.BookshelfStore{Books: []lib.BookshelfBook{
 			{
@@ -128,7 +128,7 @@ func TestFormatCompactReadingPanelCentersNarrowTextBlock(t *testing.T) {
 	app = &appState{
 		mode: modeReading,
 		readingState: readingState{
-			compactMode:  true,
+			focusLevel:   2,
 			contentWidth: 40,
 		},
 		config: &lib.Config{

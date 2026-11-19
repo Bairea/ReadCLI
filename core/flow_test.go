@@ -133,7 +133,7 @@ func TestDispatchSettingsAndChromeFlows(t *testing.T) {
 	applyReadingTextColorInput()
 	cycleReadingColorPreset()
 	toggleBorder()
-	toggleCompactMode()
+	cycleFocusMode()
 	displayBossKey()
 
 	setStatus(statusInfo, "短提示")

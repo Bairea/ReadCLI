@@ -187,7 +187,9 @@ func moveReading(delta int) {
 	app.reader.Goto(app.reader.CurrentPos() + delta)
 	app.readingState.showHelp = false
 	app.readingState.showProgress = false
-	setStatusf(statusInfo, "阅读位置 %d/%d", app.reader.CurrentPos()+1, app.reader.Total())
+	if effectiveFocusLevel() < 2 {
+		setStatusf(statusInfo, "阅读位置 %d/%d", app.reader.CurrentPos()+1, app.reader.Total())
+	}
 	syncCurrentBookState()
 }
 

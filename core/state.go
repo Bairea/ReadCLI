@@ -106,8 +106,9 @@ type readingState struct {
 	showProgress         bool
 	showHelp             bool
 	showReadingQuickHelp bool
-	compactMode          bool
+	focusLevel           int
 	displayLines         int
+	focusLines           int
 	color                int
 	timer                bool
 	ticker               *time.Ticker

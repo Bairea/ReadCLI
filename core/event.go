@@ -49,10 +49,16 @@ func handleHomeEvent(id string) {
 }
 
 func handleReadingEvent(id string) {
-	if id == "<Escape>" && app.online.busy != "" {
-		cancelOnlineRequest()
-		setStatus(statusInfo, "已取消加载")
-		return
+	if id == "<Escape>" {
+		if app.online.busy != "" {
+			cancelOnlineRequest()
+			setStatus(statusInfo, "已取消加载")
+			return
+		}
+		if app.readingState.focusLevel > 0 {
+			exitFocusMode()
+			return
+		}
 	}
 	if _, ok := app.reader.(*reader.OnlineReader); ok {
 		switch id {
@@ -82,10 +88,10 @@ func handleReadingEvent(id string) {
 	case "f":
 		toggleBorder()
 	case "z":
-		toggleCompactMode()
+		cycleFocusMode()
 	case "b":
 		displayBossKey()
-	case "<C-n>", "j", "<Space>", "<Enter>", "<Down>":
+	case "<C-n>", "j", "<Space>", "<Enter>", "<Down>", "<A-s>":
 		if app.readingState.rowNumber == "" {
 			moveReading(pageStep())
 		} else {
@@ -96,7 +102,7 @@ func handleReadingEvent(id string) {
 			}
 			app.readingState.rowNumber = ""
 		}
-	case "<C-p>", "k", "<Up>":
+	case "<C-p>", "k", "<Up>", "<A-w>":
 		if app.readingState.rowNumber == "" {
 			moveReading(-pageStep())
 		} else {
@@ -114,9 +120,9 @@ func handleReadingEvent(id string) {
 		app.reader.NextChapter()
 		syncCurrentBookState()
 	case "+", "=":
-		setDisplayLines(app.readingState.displayLines + 1)
+		adjustDisplayLines(1)
 	case "-", "_":
-		setDisplayLines(app.readingState.displayLines - 1)
+		adjustDisplayLines(-1)
 	case "c":
 		cycleReadingColorPreset()
 	case "C":

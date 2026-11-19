@@ -46,7 +46,7 @@ ReadCLI is a terminal ebook reader with support for local `TXT` / `EPUB` and onl
 * Highlights matches on the current page
 * Save, list, delete, and jump to bookmarks
 * Page scrolling and configurable visible text lines per page
-* Full reading UI and compact reading UI, with compact mode showing only the text, chapter, and progress
+* Full, half-focus, and focus reading UIs that progressively hide sidebars and the header, with focus mode showing only the text and one status line
 * Adjustable content width, margins, top padding, line spacing, text color, high contrast mode, basic color mode, and auto-page interval
 * Reflows text based on terminal width and wide-character display width
 * Reader cache with automatic invalidation by file size and modified time
@@ -67,7 +67,7 @@ ReadCLI is a terminal ebook reader with support for local `TXT` / `EPUB` and onl
 
 * Three themes: `vscode`, `jetbrains`, `ops-console`
 * Dedicated status and shortcut hints for bookshelf, reading, TOC, and bookmarks
-* Press `z` in the reading view to switch between full and compact UI; the setting is saved
+* Press `z` in the reading view to cycle full / half-focus / focus UI; the setting is saved, and `Esc` returns straight to the full UI
 * Import path input supports cursor movement, `Tab` completion, candidate selection, and paging
 * Drag files or directories directly into the import input
 * Supports both Vim-style keys and arrow-key navigation
@@ -224,9 +224,13 @@ Press `,` while reading to open the reading settings panel. You can adjust:
 * basic color mode
 * auto-page interval
 
+Content width, margins, and alignment apply immediately in the full, half-focus, and focus UIs alike.
+
 Press `c` to cycle through bright preset colors.
 Press `t` to toggle auto page turning.
-Press `z` to switch between the full reading UI and compact reading UI. Compact mode hides the header, sidebars, and most hints, leaving the novel text, chapter title, and reading progress.
+Press `z` to cycle through the three reading UIs: full keeps the header, sidebars, and footer; half-focus hides the sidebars and keeps the header and footer hints; focus leaves only the text and one status line. Press `Esc` in the reading view to return straight to the full UI.
+
+In half-focus and focus the text fills the available window height automatically, and the visible-lines setting only applies to the full UI; press `+` / `-` there to adjust the line count for the current session.
 
 ### 5. Check for updates
 
@@ -286,8 +290,8 @@ Press `?` to open the built-in help page. Both Vim-style keys and arrow keys are
 
 ### Reading
 
-* Vim-style: `j/k` page down/up, `[` / `]` previous/next chapter, `/` search, `n/N` next/previous result, `s/B` bookmarks, `m` TOC, `C` switch an online book's source, `c` text color, `z` compact/full UI, `u` check updates
-* Arrow keys: `↑/↓` page down/up, `←/→` previous/next chapter, `z` compact/full UI, `u` check updates
+* Vim-style: `j/k` page down/up, `Alt+w/s` previous/next page, `[` / `]` previous/next chapter, `/` search, `n/N` next/previous result, `s/B` bookmarks, `m` TOC, `C` switch an online book's source, `c` text color, `z` cycle focus level (`Esc` back to full), `u` check updates
+* Arrow keys: `↑/↓` page down/up, `Alt+w/s` previous/next page, `←/→` previous/next chapter, `z` cycle focus level (`Esc` back to full), `u` check updates
 * Reading settings: press `,` to adjust alignment, content width, margins, line spacing, text color, high contrast mode, basic color mode, and auto-page interval
 
 ### TOC / Bookmarks
@@ -298,10 +302,10 @@ Press `?` to open the built-in help page. Both Vim-style keys and arrow keys are
 
 ### General
 
-* `+ / -` adjust visible content lines per page
+* `+ / -` adjust visible content lines per page (session-only in half-focus and focus)
 * `c` cycle text color
 * `T` switch theme
-* `z` switch compact / full reading UI
+* `z` cycle full / half-focus / focus reading UI
 * `u` manually check for updates
 * `p` show reading progress
 * `b` trigger Boss Key
@@ -341,15 +345,15 @@ Quit ReadCLI before copying the entire data directory for backup. To restore, ke
 * auto-page interval in milliseconds
 * text color (`#RRGGBB`, `#RGB`, `R,G,B`)
 * `reading_alignment`: `"center"`, `"left"`, or `"right"` for the entire reading column
-* `compact_mode`
+* `focus_level`: reading focus level, `0` full, `1` half-focus, `2` focus; legacy `compact_mode` is still read and `true` maps to focus mode
 * `reading_high_contrast`
 * `force_basic_color`
 
 ### Reading alignment
 
-Press `a` in the reading view to cycle center → left → right. Changes apply immediately and are saved. You can also press `,`, select 正文对齐 (alignment), and use `←/→` or `Enter`. Both full and compact modes share this setting. The entire text column moves within the left/right margins, preserving paragraph indentation, line breaks, and reading position.
+Press `a` in the reading view to cycle center → left → right. Changes apply immediately and are saved. You can also press `,`, select 正文对齐 (alignment), and use `←/→` or `Enter`. The three reading UIs share this setting. The entire text column moves within the left/right margins, preserving paragraph indentation and reading position.
 
-To configure it manually, add `"reading_alignment": "right"` to `config.json` and restart. Set `"reading_alignment": "left"` and `"reading_margin_left": 0` to place the column at the left edge. A missing, empty, or invalid value preserves the original layout: centered in compact mode and left-aligned in full mode.
+To configure it manually, add `"reading_alignment": "right"` to `config.json` and restart. Set `"reading_alignment": "left"` and `"reading_margin_left": 0` to place the column at the left edge. A missing, empty, or invalid value preserves the original layout: left-aligned in the full UI, centered in half-focus and focus UI.
 
 ## Development
 

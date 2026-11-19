@@ -44,7 +44,7 @@ func Run(initialFile string, requestedLines int, version string) {
 		},
 		readingState: readingState{
 			lastSearchIndex: -1,
-			compactMode:     cfg.CompactMode,
+			focusLevel:      cfg.FocusLevel,
 			displayLines:    cfg.DisplayLines,
 		},
 		updateState: updateState{
@@ -110,7 +110,7 @@ func Run(initialFile string, requestedLines int, version string) {
 			return nil
 		}
 
-		wasCompact := compactReadingUI()
+		wasFocusLevel := effectiveFocusLevel()
 
 		dispatchEvent(id)
 
@@ -119,7 +119,7 @@ func Run(initialFile string, requestedLines int, version string) {
 			return nil
 		}
 
-		if wasCompact != compactReadingUI() {
+		if wasFocusLevel != effectiveFocusLevel() {
 			applyLayoutFromAppWithoutReflow()
 			return nil
 		}

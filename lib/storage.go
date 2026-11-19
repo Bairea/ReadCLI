@@ -17,6 +17,7 @@ type Config struct {
 	DisplayLines             int     `json:"display_lines"`
 	ShowBorder               bool    `json:"show_border"`
 	CompactMode              bool    `json:"compact_mode"`
+	FocusLevel               int     `json:"focus_level"`
 	SelectedBookshelf        int     `json:"selected_bookshelf"`
 	SkippedUpdateVersion     string  `json:"skipped_update_version"`
 	BossKeyCommand           string  `json:"boss_key_command"`
@@ -174,6 +175,13 @@ func sanitizeConfig(cfg *Config) {
 		cfg.Theme = def.Theme
 	}
 	cfg.BossKeyCommand = strings.TrimSpace(cfg.BossKeyCommand)
+	if cfg.FocusLevel < 0 || cfg.FocusLevel > 2 {
+		cfg.FocusLevel = 0
+	}
+	if cfg.FocusLevel == 0 && cfg.CompactMode {
+		cfg.FocusLevel = 2
+	}
+	cfg.CompactMode = cfg.FocusLevel > 0
 	if cfg.DisplayLines < 1 {
 		cfg.DisplayLines = def.DisplayLines
 	}

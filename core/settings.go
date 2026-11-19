@@ -24,18 +24,35 @@ func toggleBorder() {
 	app.uiState.showBorder = !app.uiState.showBorder
 	app.config.ShowBorder = app.uiState.showBorder
 	saveConfig("保存配置")
+	applyLayoutFromAppWithoutReflow()
 }
 
-func toggleCompactMode() {
-	app.readingState.compactMode = !app.readingState.compactMode
-	app.config.CompactMode = app.readingState.compactMode
-	saveConfig("保存配置")
-	if app.readingState.compactMode {
-		setStatus(statusInfo, "已切换为精简阅读界面")
-	} else {
-		setStatus(statusInfo, "已切换为全信息阅读界面")
+func cycleFocusMode() {
+	applyFocusLevel((app.readingState.focusLevel + 1) % 3)
+}
+
+func exitFocusMode() {
+	if app.readingState.focusLevel == 0 {
+		return
 	}
-	applyLayoutFromAppWithoutReflow()
+	applyFocusLevel(0)
+}
+
+func applyFocusLevel(level int) {
+	app.readingState.focusLevel = level
+	app.readingState.focusLines = 0
+	app.config.FocusLevel = level
+	app.config.CompactMode = level > 0
+	saveConfig("保存配置")
+	switch level {
+	case 1:
+		setStatus(statusInfo, "已切换为半专注模式")
+	case 2:
+		setStatus(statusInfo, "已切换为专注模式")
+	default:
+		setStatus(statusInfo, "已切换为全信息模式")
+	}
+	applyLayoutFromApp()
 }
 
 func toggleTimer() {
@@ -174,7 +191,7 @@ func readingAlignment() string {
 			return app.config.ReadingAlignment
 		}
 	}
-	if app != nil && app.readingState.compactMode {
+	if effectiveFocusLevel() >= 1 {
 		return "center"
 	}
 	return "left"
@@ -238,6 +255,29 @@ func cycleReadingColorPreset() {
 	setStatus(statusInfo, "字体颜色已切换为 "+app.config.ReadingTextColor)
 }
 
+func adjustDisplayLines(delta int) {
+	if effectiveFocusLevel() >= 1 {
+		maxLines := readingMaxSourceLines()
+		if maxLines < 1 {
+			maxLines = 1
+		}
+		lines := readingVisibleSourceLines() + delta
+		if lines < 1 {
+			lines = 1
+		}
+		if lines >= maxLines {
+			app.readingState.focusLines = 0
+			lines = maxLines
+		} else {
+			app.readingState.focusLines = lines
+		}
+		setStatusf(statusInfo, "每页正文 %d 行", lines)
+		syncCurrentBookState()
+		return
+	}
+	setDisplayLines(app.readingState.displayLines + delta)
+}
+
 func setDisplayLines(lines int) {
 	if lines < 1 {
 		lines = 1
@@ -288,7 +328,8 @@ func persistState() {
 	}
 	app.config.DisplayLines = app.readingState.displayLines
 	app.config.ShowBorder = app.uiState.showBorder
-	app.config.CompactMode = app.readingState.compactMode
+	app.config.FocusLevel = app.readingState.focusLevel
+	app.config.CompactMode = app.readingState.focusLevel > 0
 	app.config.SelectedBookshelf = app.bookshelfState.shelfIndex
 	saveConfig("保存配置")
 	saveBookshelf("保存书架")

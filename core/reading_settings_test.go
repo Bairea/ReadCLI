@@ -26,9 +26,13 @@ func TestReadingAlignmentPositionsColumn(t *testing.T) {
 			{"right", 45, 40, 20, 20, 5},
 		} {
 			t.Run(fmt.Sprintf("compact=%t/%+v", compact, tc), func(t *testing.T) {
+				level := 0
+				if compact {
+					level = 2
+				}
 				app = &appState{
 					mode:         modeReading,
-					readingState: readingState{compactMode: compact, contentWidth: tc.contentWidth},
+					readingState: readingState{focusLevel: level, contentWidth: tc.contentWidth},
 					config:       &lib.Config{ReadingAlignment: tc.alignment, ReadingMarginLeft: tc.left, ReadingMarginRight: tc.right},
 				}
 				mainContentWidth, mainContentHeight = tc.width, 20
@@ -62,7 +66,7 @@ func TestReadingAlignmentKeyboardAndSettingsPersistWithoutReflow(t *testing.T) {
 		mode:         modeReading,
 		config:       &lib.Config{},
 		reader:       r,
-		readingState: readingState{compactMode: true, contentWidth: 40},
+		readingState: readingState{focusLevel: 2, contentWidth: 40},
 	}
 	for _, want := range []string{"left", "right", "center"} {
 		dispatchEvent("a")

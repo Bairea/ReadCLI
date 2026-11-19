@@ -55,6 +55,7 @@ func refreshChrome() {
 		left.SetBorder(showBorder)
 		right.SetBorder(showBorder)
 		footer.SetBorder(showBorder)
+		main.SetBorder(showBorder)
 	}
 
 	header.SetBorderColor(th.HeaderTint)

@@ -51,6 +51,10 @@ func tcellKeyEventID(ev *tcell.EventKey) string {
 			if r == ' ' {
 				return "<Space>"
 			}
+			modifiers := ev.Modifiers()
+			if modifiers&tcell.ModAlt != 0 && modifiers&tcell.ModCtrl == 0 {
+				return "<A-" + string(r) + ">"
+			}
 			return string(r)
 		}
 		return ""

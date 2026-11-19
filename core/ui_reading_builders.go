@@ -41,10 +41,10 @@ func buildHelpPanel() string {
 
 	leftSections := []string{
 		"[书架首页](fg:green,mod:bold)\n  j/k 移动  i 导入  S 书源  s 在线搜书\n  C 换源  o 排序  r 过滤  x 移除\n  ? 帮助  q 退出",
-		"[阅读界面](fg:green,mod:bold)\n  j/k 翻页  [/] 切章  / 搜索\n  n/N 搜索跳转  s 书签  B 书签列表\n  m 目录  p 进度  , 阅读设置\n  a 正文对齐  c 字体颜色  C 换源\n  t 自动翻页  b Boss Key  z 精简/全信息\n  T 主题  +/- 行数",
+		"[阅读界面](fg:green,mod:bold)\n  j/k 翻页  Alt+w/s 翻页  [/] 切章  / 搜索\n  n/N 搜索跳转  s 书签  B 书签列表\n  m 目录  p 进度  , 阅读设置\n  a 正文对齐  c 字体颜色  C 换源\n  t 自动翻页  b Boss Key  z 专注级别\n  T 主题  +/- 行数",
 		"[目录](fg:green,mod:bold)\n  j/k 移动  Enter 打开  m 返回\n  0-9 页码输入",
 		"[书签列表](fg:green,mod:bold)\n  j/k 移动  d 删除  Enter 打开\n  B/q 返回",
-		"[通用](fg:green,mod:bold)\n  f 切换边框  T 切换主题\n  z 精简/全信息  u 检查更新\n  q 返回/退出",
+		"[通用](fg:green,mod:bold)\n  f 切换边框  T 切换主题\n  z 专注级别  u 检查更新\n  Esc 回全信息  q 返回/退出",
 	}
 
 	rightSections := []string{
@@ -149,7 +149,7 @@ func readingContentWidth(mainWidth int) int {
 		return 80
 	}
 	if app != nil && app.reader != nil {
-		if compactReadingUI() {
+		if effectiveFocusLevel() >= 1 {
 			return compactReadingContentWidth(width)
 		}
 		target := int(float64(width) * readingWidthRatio())
@@ -172,20 +172,15 @@ func compactReadingContentWidth(width int) int {
 	if width <= 0 {
 		width = fixedWidth
 	}
-	if width <= 44 {
-		return max(20, width-4)
+	target := int(float64(width) * readingWidthRatio())
+	target -= readingMarginLeft() + readingMarginRight()
+	if target < 20 {
+		target = 20
 	}
-	target := int(float64(width) * 0.62)
-	if target > 72 {
-		target = 72
+	if target > width {
+		target = width
 	}
-	if target < 36 {
-		target = 36
-	}
-	if target > width-8 {
-		target = width - 8
-	}
-	return max(20, target)
+	return target
 }
 
 func readingVisibleSourceLines() int {
@@ -195,6 +190,12 @@ func readingVisibleSourceLines() int {
 	maxLines := readingMaxSourceLines()
 	if maxLines < 1 {
 		maxLines = 1
+	}
+	if effectiveFocusLevel() >= 1 {
+		if app.readingState.focusLines > 0 && app.readingState.focusLines < maxLines {
+			return app.readingState.focusLines
+		}
+		return maxLines
 	}
 	if app.readingState.displayLines > maxLines {
 		return maxLines
@@ -207,6 +208,9 @@ func readingMaxSourceLines() int {
 		return max(1, app.readingState.displayLines)
 	}
 	available := mainContentHeight - readingMarginTop() - readingMarginBottom()
+	if effectiveFocusLevel() >= 1 {
+		available = mainContentHeight - compactReadingTopPad() - readingMarginBottom()
+	}
 	if available < 1 {
 		return 1
 	}
@@ -214,8 +218,18 @@ func readingMaxSourceLines() int {
 	return max(1, (available+spacing)/(spacing+1))
 }
 
+func compactReadingTopPad() int {
+	pad := 1
+	if mainContentHeight >= 34 {
+		pad = 3
+	} else if mainContentHeight >= 22 {
+		pad = 2
+	}
+	return max(pad, readingMarginTop())
+}
+
 func formatReadingPanel(text string) string {
-	if compactReadingUI() {
+	if effectiveFocusLevel() >= 1 {
 		return formatCompactReadingPanel(text)
 	}
 	text = strings.TrimRight(text, "\n")
@@ -252,29 +266,11 @@ func formatCompactReadingPanel(text string) string {
 		return ""
 	}
 	lines := strings.Split(text, "\n")
-	contentWidth := app.readingState.contentWidth
-	if contentWidth <= 0 {
-		contentWidth = compactReadingContentWidth(mainContentWidth)
-	}
-	leftPadWidth := 2
-	if mainContentWidth > contentWidth {
-		leftPadWidth = (mainContentWidth - contentWidth) / 2
-	}
-	if mainContentWidth <= 52 && leftPadWidth > 2 {
-		leftPadWidth = 2
-	}
-	if app.config != nil && app.config.ReadingAlignment != "" {
-		leftPadWidth = alignedReadingLeftPadding()
-	}
-	topPad := 1
-	if mainContentHeight >= 34 {
-		topPad = 3
-	} else if mainContentHeight >= 22 {
-		topPad = 2
-	}
+	leftPadWidth := alignedReadingLeftPadding()
+	topPad := compactReadingTopPad()
 	lineGap := readingLineSpacing()
 	leftPad := strings.Repeat(" ", max(0, leftPadWidth))
-	padded := make([]string, 0, len(lines)*(lineGap+1)+topPad)
+	padded := make([]string, 0, len(lines)*(lineGap+1)+topPad+readingMarginBottom())
 	for i := 0; i < topPad; i++ {
 		padded = append(padded, "")
 	}
@@ -285,6 +281,9 @@ func formatCompactReadingPanel(text string) string {
 				padded = append(padded, "")
 			}
 		}
+	}
+	for i := 0; i < readingMarginBottom(); i++ {
+		padded = append(padded, "")
 	}
 	return strings.Join(padded, "\n")
 }
